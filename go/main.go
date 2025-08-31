@@ -13,11 +13,15 @@ import (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, World!")
+	if _, err := fmt.Fprintf(w, "Hello, World!"); err != nil {
+		log.Printf("Error writing response: %v", err)
+	}
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "OK")
+	if _, err := fmt.Fprintf(w, "OK"); err != nil {
+		log.Printf("Error writing health response: %v", err)
+	}
 }
 
 func infoHandler(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +49,9 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 
 func imageHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO Add image path to a cloud provided CDN Cache or local Storage
-	fmt.Fprintf(w, "")
+	if _, err := fmt.Fprintf(w, ""); err != nil {
+		log.Printf("Error writing image response: %v", err)
+	}
 }
 func notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "404 page not found", http.StatusNotFound)

@@ -58,8 +58,14 @@ func TestHealthHandler(t *testing.T) {
 
 func TestInfoHandler(t *testing.T) {
 	// Set environment variable for testing
-	os.Setenv("GITSHA", "test-sha-123")
-	defer os.Unsetenv("GITSHA")
+	if err := os.Setenv("GITSHA", "test-sha-123"); err != nil {
+		t.Fatalf("Failed to set GITSHA environment variable: %v", err)
+	}
+	defer func() {
+		if err := os.Unsetenv("GITSHA"); err != nil {
+			t.Logf("Failed to unset GITSHA environment variable: %v", err)
+		}
+	}()
 
 	req, err := http.NewRequest("GET", "/info", nil)
 	if err != nil {
@@ -168,7 +174,9 @@ func TestNotFoundHandler(t *testing.T) {
 func TestLoggingCall(t *testing.T) {
 	// Create a test handler
 	testHandler := func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("test response"))
+		if _, err := w.Write([]byte("test response")); err != nil {
+			t.Errorf("Failed to write test response: %v", err)
+		}
 	}
 
 	req, err := http.NewRequest("GET", "/test", nil)
@@ -289,13 +297,21 @@ func TestMainFunctionEnvironmentVariables(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Save original env var
 			originalPort := os.Getenv("WEBSERVER_PORT")
-			defer os.Setenv("WEBSERVER_PORT", originalPort)
+			defer func() {
+				if err := os.Setenv("WEBSERVER_PORT", originalPort); err != nil {
+					t.Logf("Failed to restore WEBSERVER_PORT environment variable: %v", err)
+				}
+			}()
 
 			// Set test env var
 			if tt.envValue != "" {
-				os.Setenv("WEBSERVER_PORT", tt.envValue)
+				if err := os.Setenv("WEBSERVER_PORT", tt.envValue); err != nil {
+					t.Fatalf("Failed to set WEBSERVER_PORT environment variable: %v", err)
+				}
 			} else {
-				os.Unsetenv("WEBSERVER_PORT")
+				if err := os.Unsetenv("WEBSERVER_PORT"); err != nil {
+					t.Fatalf("Failed to unset WEBSERVER_PORT environment variable: %v", err)
+				}
 			}
 
 			// Test the port logic (extracted from main function)
@@ -341,7 +357,9 @@ func BenchmarkInfoHandler(b *testing.B) {
 
 func BenchmarkLoggingCall(b *testing.B) {
 	testHandler := func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("test"))
+		if _, err := w.Write([]byte("test")); err != nil {
+			b.Errorf("Failed to write test response: %v", err)
+		}
 	}
 	wrappedHandler := loggingCall(testHandler)
 	req, _ := http.NewRequest("GET", "/test", nil)
@@ -362,9 +380,9 @@ func TestServerLifecycle(t *testing.T) {
 		Addr: ":0", // Use any available port
 	}
 	
-	// Test that we can create the server without error
-	if server == nil {
-		t.Error("Failed to create server")
+	// Test that server address is set correctly
+	if server.Addr != ":0" {
+		t.Errorf("Expected server address to be ':0', got %s", server.Addr)
 	}
 	
 	// Test graceful shutdown context creation
