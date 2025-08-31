@@ -185,7 +185,7 @@ func TestLoggingCall(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	
+
 	// Wrap with logging middleware
 	wrappedHandler := loggingCall(testHandler)
 	wrappedHandler.ServeHTTP(rr, req)
@@ -277,8 +277,8 @@ func TestSetupRoutes(t *testing.T) {
 
 func TestMainFunctionEnvironmentVariables(t *testing.T) {
 	tests := []struct {
-		name        string
-		envValue    string
+		name            string
+		envValue        string
 		expectedDefault string
 	}{
 		{
@@ -330,7 +330,7 @@ func TestMainFunctionEnvironmentVariables(t *testing.T) {
 // Benchmark tests
 func BenchmarkHandler(b *testing.B) {
 	req, _ := http.NewRequest("GET", "/", nil)
-	
+
 	for i := 0; i < b.N; i++ {
 		rr := httptest.NewRecorder()
 		handler(rr, req)
@@ -339,7 +339,7 @@ func BenchmarkHandler(b *testing.B) {
 
 func BenchmarkHealthHandler(b *testing.B) {
 	req, _ := http.NewRequest("GET", "/health", nil)
-	
+
 	for i := 0; i < b.N; i++ {
 		rr := httptest.NewRecorder()
 		healthHandler(rr, req)
@@ -348,7 +348,7 @@ func BenchmarkHealthHandler(b *testing.B) {
 
 func BenchmarkInfoHandler(b *testing.B) {
 	req, _ := http.NewRequest("GET", "/info", nil)
-	
+
 	for i := 0; i < b.N; i++ {
 		rr := httptest.NewRecorder()
 		infoHandler(rr, req)
@@ -363,7 +363,7 @@ func BenchmarkLoggingCall(b *testing.B) {
 	}
 	wrappedHandler := loggingCall(testHandler)
 	req, _ := http.NewRequest("GET", "/test", nil)
-	
+
 	for i := 0; i < b.N; i++ {
 		rr := httptest.NewRecorder()
 		wrappedHandler(rr, req)
@@ -375,16 +375,16 @@ func TestServerLifecycle(t *testing.T) {
 	// This test verifies that the server can start and stop without hanging
 	// Note: This is a simplified test since testing actual signal handling
 	// requires more complex setup
-	
+
 	server := &http.Server{
 		Addr: ":0", // Use any available port
 	}
-	
+
 	// Test that server address is set correctly
 	if server.Addr != ":0" {
 		t.Errorf("Expected server address to be ':0', got %s", server.Addr)
 	}
-	
+
 	// Test graceful shutdown context creation
 	// (This tests the timeout logic without actually starting the server)
 	timeout := 5 * time.Second
