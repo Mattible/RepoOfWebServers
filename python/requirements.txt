@@ -1,0 +1,5 @@
+# Python Web Server Requirements
+requests>=2.31.0
+flask>=2.3.0
+fastapi>=0.100.0
+pyinstaller>=5.8.0
