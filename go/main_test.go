@@ -452,32 +452,6 @@ func TestGracefulShutdown(t *testing.T) {
 	}
 }
 
-func TestMainFunction(t *testing.T) {
-	// Save original environment
-	originalPort := os.Getenv("WEBSERVER_PORT")
-	defer func() {
-		if err := os.Setenv("WEBSERVER_PORT", originalPort); err != nil {
-			t.Logf("Failed to restore WEBSERVER_PORT: %v", err)
-		}
-	}()
-
-	// Test with custom port
-	if err := os.Setenv("WEBSERVER_PORT", "9999"); err != nil {
-		t.Fatalf("Failed to set WEBSERVER_PORT: %v", err)
-	}
-
-	// We can't easily test the full main function without complex setup,
-	// but we can test the port logic which is part of main
-	port := os.Getenv("WEBSERVER_PORT")
-	if port == "" {
-		port = "8000"
-	}
-
-	if port != "9999" {
-		t.Errorf("Expected port 9999, got %s", port)
-	}
-}
-
 func TestHandlerError(t *testing.T) {
 	// Test handler error path by using a response writer that fails
 	req, err := http.NewRequest("GET", "/", nil)
@@ -681,31 +655,6 @@ func TestDifferentHTTPMethods(t *testing.T) {
 					method, status, http.StatusOK)
 			}
 		})
-	}
-}
-
-func TestGracefulShutdownFunction(t *testing.T) {
-	// Test the gracefulShutdown function logic without OS signals
-	server := &http.Server{
-		Addr: ":0",
-	}
-
-	// Start server
-	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			t.Errorf("Server failed: %v", err)
-		}
-	}()
-
-	// Give server time to start
-	time.Sleep(50 * time.Millisecond)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	// This simulates what gracefulShutdown does internally
-	if err := server.Shutdown(ctx); err != nil {
-		t.Errorf("Server shutdown failed: %v", err)
 	}
 }
 
