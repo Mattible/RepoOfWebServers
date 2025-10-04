@@ -646,9 +646,9 @@ func TestDifferentHTTPMethods(t *testing.T) {
 			}
 
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(handler)
+			testHandler := http.HandlerFunc(handler)
 
-			handler.ServeHTTP(rr, req)
+			testHandler.ServeHTTP(rr, req)
 
 			if status := rr.Code; status != http.StatusOK {
 				t.Errorf("%s request returned wrong status code: got %v want %v",
