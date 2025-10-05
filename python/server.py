@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-"""
-Python Web Server
-A simple HTTP server with logging and environment configuration.
-"""
-
 import os
 import logging
 import signal
