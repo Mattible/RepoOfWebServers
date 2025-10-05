@@ -45,15 +45,6 @@ class WebServerHandler(BaseHTTPRequestHandler):
         else:
             self._send_404_response()
     
-    def do_POST(self):
-        """Handle POST requests"""
-        logger.info(f"POST {self.path} from {self.client_address[0]}")
-        
-        if self.path == '/echo':
-            self._handle_echo_request()
-        else:
-            self._send_404_response()
-    
     def _send_hello_response(self):
         """Send hello world response"""
         message = "Hello  World!\n"
@@ -91,36 +82,6 @@ class WebServerHandler(BaseHTTPRequestHandler):
         # TODO: Add image path to a cloud provided CDN Cache or local Storage
         message = ""
         self._send_response(200, message, 'text/plain')
-    
-    def _handle_echo_request(self):
-        """Handle echo POST request"""
-        try:
-            # Get content length
-            content_length = int(self.headers.get('Content-Length', 0))
-            
-            # Read request body
-            if content_length > 0:
-                post_data = self.rfile.read(content_length).decode('utf-8')
-            else:
-                post_data = ""
-            
-            # Echo the data back
-            echo_response = {
-                "echo": post_data,
-                "method": "POST",
-                "path": self.path,
-                "client": self.client_address[0]
-            }
-            
-            self._send_json_response(200, echo_response)
-            
-        except Exception as e:
-            error_response = {
-                "error": "Echo request failed",
-                "message": str(e),
-                "status_code": 500
-            }
-            self._send_json_response(500, error_response)
     
     def _send_404_response(self):
         """Send 404 not found response"""
@@ -204,9 +165,9 @@ def main():
     """Main function"""
     # Get configuration from environment variables
     host = os.getenv('HOST', '0.0.0.0')
-    # Priority: WEBSERVER_PORT -> PORT -> default 8000
-    port = int(os.getenv('WEBSERVER_PORT', os.getenv('PORT', 8000)))
-    
+    # Use WEBSERVER_PORT environment variable or default to 8000
+    port = int(os.getenv('WEBSERVER_PORT', 8000))
+
     # Create and start server
     server = PythonWebServer(host, port)
     server.start()
