@@ -27,6 +27,7 @@ pub struct RouteInfo {
     pub description: String,
 }
 
+#[derive(Clone)]
 pub struct WebServer {
     port: String,
 }
@@ -158,14 +159,6 @@ impl WebServer {
             Err(e) => {
                 eprintln!("Failed to read from socket: {}", e);
             }
-        }
-    }
-}
-
-impl Clone for WebServer {
-    fn clone(&self) -> Self {
-        Self {
-            port: self.port.clone(),
         }
     }
 }
