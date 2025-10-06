@@ -1,4 +1,4 @@
-# Repo Of WebServers -  A Pick your Poison Adventure 🧪
+# Repo Of WebServers - A Pick your Poison Adventure 🧪
 
 Welcome! - To the only corner of the internet that has more webserver code than anybody ever asked for!
 
