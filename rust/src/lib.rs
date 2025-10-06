@@ -9,11 +9,15 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ServerInfo {
+    #[serde(rename = "Repository")]
     pub repository: String,
+    #[serde(rename = "URL")]
     pub url: String,
     #[serde(rename = "Programming Language")]
     pub programming_language: String,
     pub version: String,
+    #[serde(rename = "gitSha")]
+    pub gitsha: String,
     pub routes: Vec<RouteInfo>,
 }
 
@@ -29,9 +33,9 @@ pub struct WebServer {
 
 impl WebServer {
     pub fn new() -> Self {
-        let port_env = env::var("WEBSERVER_PORT").unwrap_or_else(|_| "8080".to_string());
+        let port_env = env::var("WEBSERVER_PORT").unwrap_or_else(|_| "8000".to_string());
         let port = port_env.trim();
-        let port = if port.is_empty() { "8080" } else { port };
+        let port = if port.is_empty() { "8000" } else { port };
         Self { port: port.to_string() }
     }
 
@@ -51,6 +55,7 @@ impl WebServer {
             url: "https://github.com/Mattible/RepoOfWebServers".to_string(),
             programming_language: "Rust".to_string(),
             version: "0.1.0".to_string(),
+            gitsha: env::var("GITSHA").unwrap_or_else(|_| "N/A".to_string()),
             routes: vec![
                 RouteInfo { path: "/".to_string(), description: "Hello World".to_string() },
                 RouteInfo { path: "/health".to_string(), description: "Health check".to_string() },
@@ -85,34 +90,36 @@ impl WebServer {
     }
 
     pub fn run_server(&self) -> std::io::Result<()> {
-        let listener = TcpListener::bind(format!("127.0.0.1:{}", self.port))?;
-        println!("Server is listening on http://127.0.0.1:{}", self.port);
+        let listener = TcpListener::bind(format!("0.0.0.0:{}", self.port))?;
+        println!("Server is listening on http://0.0.0.0:{}", self.port);
         println!("Press Ctrl+C to shutdown server...");
 
         let running = Arc::new(AtomicBool::new(true));
-        let _running_clone = Arc::clone(&running);
+        let running_clone = Arc::clone(&running);
 
-        // Handle graceful shutdown in a separate thread
-        thread::spawn(move || {
-            // Simple signal handling - in a real implementation you'd use signal hooks
-            thread::sleep(Duration::from_secs(1)); // Placeholder for signal handling
-            // For now, we'll just wait - in production you'd listen for SIGINT/SIGTERM
-        });
+        // Handle graceful shutdown with proper signal handling
+        ctrlc::set_handler(move || {
+            println!("\nReceived Ctrl+C, shutting down gracefully...");
+            running_clone.store(false, Ordering::Relaxed);
+        }).expect("Error setting Ctrl+C handler");
+
+        // Set non-blocking mode for the listener
+        listener.set_nonblocking(true)?;
 
         // Accept connections while running
-        for stream in listener.incoming() {
-            if !running.load(Ordering::Relaxed) {
-                println!("Shutting down server...");
-                break;
-            }
-
-            match stream {
-                Ok(stream) => {
+        while running.load(Ordering::Relaxed) {
+            match listener.accept() {
+                Ok((stream, _addr)) => {
                     let running_clone = Arc::clone(&running);
                     let server = self.clone();
                     thread::spawn(move || {
                         Self::handle_client(stream, server, running_clone);
                     });
+                }
+                Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                    // No connection available, sleep briefly and check again
+                    thread::sleep(Duration::from_millis(100));
+                    continue;
                 }
                 Err(e) => {
                     eprintln!("Failed to accept connection: {}", e);

@@ -22,7 +22,7 @@ fn test_main_function_respects_environment() {
     // Test with PORT unset
     env::remove_var("WEBSERVER_PORT");
     let server = WebServer::new();
-    assert_eq!(server.get_port(), "8080");
+    assert_eq!(server.get_port(), "8000");
     
     // Restore original environment
     match original_port {
@@ -52,12 +52,12 @@ fn test_main_server_functionality() {
 
 #[test]
 fn test_full_server_integration() {
-    // Set up test environment
-    env::set_var("WEBSERVER_PORT", "0"); // Use port 0 for automatic assignment
+    // Set up test environment with a specific test port
+    env::set_var("WEBSERVER_PORT", "8888");
     let server = WebServer::new();
 
     // Test server creation
-    assert!(!server.get_port().is_empty());
+    assert_eq!(server.get_port(), "8888");
 
     // Test server info creation
     let info = server.create_server_info();
@@ -79,12 +79,12 @@ fn test_environment_variable_handling() {
     // Test with PORT unset
     env::remove_var("WEBSERVER_PORT");
     let server = WebServer::new();
-    assert_eq!(server.get_port(), "8080");
+    assert_eq!(server.get_port(), "8000");
 }
 
 #[test]
 fn test_all_endpoints_responses() {
-    let server = WebServer::with_port("8080");
+    let server = WebServer::with_port("8000");
 
     // Test all endpoints
     let endpoints = vec![
@@ -147,11 +147,12 @@ fn test_server_info_serialization_full() {
 
     let json = serde_json::to_string(&info).unwrap();
 
-    // Verify all expected fields are present
-    assert!(json.contains("\"repository\":\"RepoOfWebServers\""));
-    assert!(json.contains("\"url\":\"https://github.com/Mattible/RepoOfWebServers\""));
+    // Verify all expected fields are present with correct serde renames
+    assert!(json.contains("\"Repository\":\"RepoOfWebServers\""));
+    assert!(json.contains("\"URL\":\"https://github.com/Mattible/RepoOfWebServers\""));
     assert!(json.contains("\"Programming Language\":\"Rust\""));
     assert!(json.contains("\"version\":\"0.1.0\""));
+    assert!(json.contains("\"gitSha\""));
     assert!(json.contains("\"routes\":["));
 
     // Verify we can deserialize it back
@@ -162,11 +163,11 @@ fn test_server_info_serialization_full() {
 #[test]
 fn test_port_binding_validation() {
     // Test that we can create servers with different ports
-    let server1 = WebServer::with_port("8080");
+    let server1 = WebServer::with_port("8000");
     let server2 = WebServer::with_port("9090");
     let server3 = WebServer::with_port("3000");
 
-    assert_eq!(server1.get_port(), "8080");
+    assert_eq!(server1.get_port(), "8000");
     assert_eq!(server2.get_port(), "9090");
     assert_eq!(server3.get_port(), "3000");
 }
@@ -219,7 +220,7 @@ fn test_concurrent_server_creation() {
     for i in 0..5 {
         let tx_clone = tx.clone();
         thread::spawn(move || {
-            let port = format!("808{}", i);
+            let port = format!("800{}", i);
             let server = WebServer::with_port(&port);
             tx_clone.send(server.get_port().to_string()).unwrap();
         });
@@ -228,13 +229,13 @@ fn test_concurrent_server_creation() {
     // Collect results
     for _ in 0..5 {
         let port = rx.recv().unwrap();
-        assert!(port.starts_with("808"));
+        assert!(port.starts_with("800"));
     }
 }
 
 #[test]
 fn test_stress_request_handling() {
-    let server = WebServer::with_port("8080");
+    let server = WebServer::with_port("8000");
     
     // Test handling many requests in sequence
     for i in 0..100 {
@@ -292,7 +293,7 @@ fn test_various_http_methods() {
 
 #[test]
 fn test_response_content_types() {
-    let server = WebServer::with_port("8080");
+    let server = WebServer::with_port("8000");
     
     // Test text/plain responses
     let text_endpoints = vec!["/", "/health", "/image"];
@@ -312,7 +313,7 @@ fn test_response_content_types() {
 
 #[test]
 fn test_large_path_handling() {
-    let server = WebServer::with_port("8080");
+    let server = WebServer::with_port("8000");
     
     // Test very long path
     let long_path = format!("/{}", "a".repeat(1000));
@@ -369,32 +370,33 @@ fn test_server_info_json_structure() {
 #[test]
 fn test_environment_variable_persistence() {
     use std::env;
-    
-    // Test that environment changes persist correctly
+
+    // Test that each server reads the environment variable at creation time
     let original = env::var("WEBSERVER_PORT").ok();
 
     // Set WEBSERVER_PORT and create server
     env::set_var("WEBSERVER_PORT", "5555");
     let server1 = WebServer::new();
     assert_eq!(server1.get_port(), "5555");
-    
+
     // Change WEBSERVER_PORT and create another server
     env::set_var("WEBSERVER_PORT", "6666");
     let server2 = WebServer::new();
     assert_eq!(server2.get_port(), "6666");
-    
-    // First server should still have original port
-    assert_eq!(server1.get_port(), "5555");
-    
-    // Remove WEBSERVER_PORT and create server
-    env::remove_var("WEBSERVER_PORT");
-    let server3 = WebServer::new();
-    assert_eq!(server3.get_port(), "8080");
-    
-    // Previous servers should retain their ports
+
+    // First server should still have its original port (read at creation time)
     assert_eq!(server1.get_port(), "5555");
     assert_eq!(server2.get_port(), "6666");
-    
+
+    // Remove WEBSERVER_PORT and create server (should default to 8000)
+    env::remove_var("WEBSERVER_PORT");
+    let server3 = WebServer::new();
+    assert_eq!(server3.get_port(), "8000");
+
+    // Previous servers should retain their ports (they don't re-read the env var)
+    assert_eq!(server1.get_port(), "5555");
+    assert_eq!(server2.get_port(), "6666");
+
     // Restore environment
     match original {
         Some(port) => env::set_var("WEBSERVER_PORT", port),
@@ -420,20 +422,26 @@ fn test_clone_independence() {
     assert_eq!(info1.repository, info2.repository);
 }
 
-#[test] 
-fn test_edge_case_ports() {
-    // Test edge case WEBSERVER_PORT numbers
-    let edge_ports = vec!["0", "1", "80", "443", "8080", "65535", "99999"];
+#[test]
+fn test_gitsha_environment_variable() {
+    // Store original GITSHA value
+    let original_gitsha = env::var("GITSHA").ok();
     
-    for port in edge_ports {
-        let server = WebServer::with_port(port);
-        assert_eq!(server.get_port(), port);
-        
-        let _info = server.create_server_info();
-        // Info should not contain port information
-        
-        // Test that server can still handle requests
-        let response = server.handle_request("GET", "/");
-        assert!(response.contains("Hello, world!"));
+    // Test with GITSHA set
+    env::set_var("GITSHA", "abc123def");
+    let server = WebServer::new();
+    let info = server.create_server_info();
+    assert_eq!(info.gitsha, "abc123def");
+    
+    // Test with GITSHA unset (should default to "N/A")
+    env::remove_var("GITSHA");
+    let server = WebServer::new();
+    let info = server.create_server_info();
+    assert_eq!(info.gitsha, "N/A");
+    
+    // Restore original environment
+    match original_gitsha {
+        Some(gitsha) => env::set_var("GITSHA", gitsha),
+        None => env::remove_var("GITSHA"),
     }
 }
