@@ -79,14 +79,14 @@ The server can be configured using environment variables:
 
 ```bash
 curl http://localhost:8000/
-# Response: Hello  World!
+# Response: Hello World!
 ```
 
 ### Health Check
 
 ```bash
 curl http://localhost:8000/health
-# Response: JSON with status, timestamp, and server info
+# Response: OK
 ```
 
 ### Server Information
