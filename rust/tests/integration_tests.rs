@@ -437,13 +437,13 @@ fn test_gitsha_environment_variable() {
     unsafe { env::set_var("GITSHA", "abc123def"); }
     let server = WebServer::new();
     let info = server.create_server_info();
-    assert_eq!(info.gitsha, "abc123def");
+    assert_eq!(info.git_sha, "abc123def");
     
     // Test with GITSHA unset (should default to "N/A")
     unsafe { env::remove_var("GITSHA"); }
     let server = WebServer::new();
     let info = server.create_server_info();
-    assert_eq!(info.gitsha, "N/A");
+    assert_eq!(info.git_sha, "N/A");
     
     // Restore original environment
     match original_gitsha {

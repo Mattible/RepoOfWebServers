@@ -1,6 +1,8 @@
 use rust_webserver::WebServer;
+use async_std;
 
-fn main() -> std::io::Result<()> {
+#[async_std::main]
+async fn main() -> std::io::Result<()> {
     let server = WebServer::new();
-    server.run_server()
+    server.run_server().await
 }

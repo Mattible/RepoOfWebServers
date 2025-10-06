@@ -1,11 +1,11 @@
 use std::env;
-use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
-use std::thread;
-use std::time::Duration;
+use async_std::net::{TcpListener, TcpStream};
+use async_std::prelude::*;
+use async_std::task;
 use serde::{Deserialize, Serialize};
+
+static SHUTDOWN_FLAG: AtomicBool = AtomicBool::new(false);
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ServerInfo {
@@ -17,7 +17,7 @@ pub struct ServerInfo {
     pub programming_language: String,
     pub version: String,
     #[serde(rename = "gitSha")]
-    pub gitsha: String,
+    pub git_sha: String,
     pub routes: Vec<RouteInfo>,
 }
 
@@ -55,7 +55,7 @@ impl WebServer {
             url: "https://github.com/Mattible/RepoOfWebServers".to_string(),
             programming_language: "Rust".to_string(),
             version: "0.1.0".to_string(),
-            gitsha: env::var("GITSHA").unwrap_or_else(|_| "N/A".to_string()),
+            git_sha: env::var("GITSHA").unwrap_or_else(|_| "N/A".to_string()),
             routes: vec![
                 RouteInfo { path: "/".to_string(), description: "Hello World".to_string() },
                 RouteInfo { path: "/health".to_string(), description: "Health check".to_string() },
@@ -89,44 +89,47 @@ impl WebServer {
         }
     }
 
-    pub fn run_server(&self) -> std::io::Result<()> {
-        let listener = TcpListener::bind(format!("0.0.0.0:{}", self.port))?;
+    pub async fn run_server(&self) -> std::io::Result<()> {
+        let listener = TcpListener::bind(format!("0.0.0.0:{}", self.port)).await?;
         println!("Server is listening on http://0.0.0.0:{}", self.port);
         println!("Press Ctrl+C to shutdown server...");
 
-        let running = Arc::new(AtomicBool::new(true));
-        let running_clone = Arc::clone(&running);
+        // Reset shutdown flag
+        SHUTDOWN_FLAG.store(false, Ordering::Relaxed);
 
         // Handle graceful shutdown with proper signal handling
         ctrlc::set_handler(move || {
-            println!("\nReceived Ctrl+C, shutting down gracefully...");
-            running_clone.store(false, Ordering::Relaxed);
+            if !SHUTDOWN_FLAG.load(Ordering::Relaxed) {
+                SHUTDOWN_FLAG.store(true, Ordering::Relaxed);
+                println!("\nReceived Ctrl+C, shutting down gracefully...");
+            }
         }).expect("Error setting Ctrl+C handler");
 
-        // Set non-blocking mode for the listener
-        listener.set_nonblocking(true)?;
+        // Accept connections asynchronously
+        let mut incoming = listener.incoming();
 
-        // Accept connections while running
-        while running.load(Ordering::Relaxed) {
-            match listener.accept() {
-                Ok((stream, _addr)) => {
-                    let running_clone = Arc::clone(&running);
-                    let server = self.clone();
-                    thread::spawn(move || {
-                        Self::handle_client(stream, server, running_clone);
-                    });
-                }
-                Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                    // No connection available, sleep briefly and check again
-                    thread::sleep(Duration::from_millis(100));
-                    continue;
-                }
-                Err(e) => {
-                    eprintln!("Failed to accept connection: {}", e);
-                    if !running.load(Ordering::Relaxed) {
-                        break;
+        loop {
+            if SHUTDOWN_FLAG.load(Ordering::Relaxed) {
+                break;
+            }
+
+            // Use timeout to periodically check shutdown flag
+            match async_std::future::timeout(std::time::Duration::from_millis(100), incoming.next()).await {
+                Ok(Some(stream_result)) => {
+                    match stream_result {
+                        Ok(stream) => {
+                            let server = self.clone();
+                            task::spawn(async move {
+                                Self::handle_client(stream, server).await;
+                            });
+                        }
+                        Err(e) => {
+                            eprintln!("Failed to accept connection: {}", e);
+                        }
                     }
                 }
+                Ok(None) => break,
+                Err(_) => continue, // Timeout occurred, check shutdown flag again
             }
         }
 
@@ -134,9 +137,9 @@ impl WebServer {
         Ok(())
     }
 
-    fn handle_client(mut stream: TcpStream, server: WebServer, _running: Arc<AtomicBool>) {
+    async fn handle_client(mut stream: TcpStream, server: WebServer) {
         let mut buffer = [0; 1024];
-        match stream.read(&mut buffer) {
+        match stream.read(&mut buffer).await {
             Ok(n) => {
                 if n == 0 {
                     return;
@@ -147,7 +150,7 @@ impl WebServer {
 
                 if let Some((method, path)) = Self::parse_http_request(&request) {
                     let response = server.handle_request(method, path);
-                    if let Err(e) = stream.write_all(response.as_bytes()) {
+                    if let Err(e) = stream.write_all(response.as_bytes()).await {
                         eprintln!("Failed to write response: {}", e);
                     }
                 }

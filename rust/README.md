@@ -4,7 +4,7 @@ A high-performance, memory-safe HTTP web server written in Rust with comprehensi
 
 ## Features
 
-- ✅ **HTTP/1.1 and HTTP/2 Support** - Modern protocol support
+- ✅ **Async/Await Runtime** - Built with async-std for high-performance concurrent I/O
 - ✅ **Multiple Endpoints** - Health checks, info, and custom handlers
 - ✅ **Graceful Shutdown** - Clean shutdown on SIGINT/SIGTERM signals
 - ✅ **Request Logging** - Comprehensive logging with client IP and request details
@@ -98,7 +98,7 @@ curl http://localhost:8000/info
 #   "Repository": "RepoOfWebServers",
 #   "URL": "https://github.com/Mattible/RepoOfWebServers",
 #   "version": "0.1.0",
-#   "gitsSha": "xxxxxx",
+#   "gitSha": "xxxxxx",
 #   "routes": []
 # }
 ```
@@ -130,8 +130,9 @@ rust/
 
 ```toml
 [dependencies]
-serde = "1.0"
+serde = { version = "1.0", features = ["derive"] }  # Serialization/deserialization framework
 serde_json = "1.0"                                  # JSON serialization support
+async-std = { version = "1.12", features = ["attributes"] } # Async runtime for efficient I/O
 ctrlc = "3.4"                                        # Cross-platform signal handling for graceful shutdown
 
 [dev-dependencies]
