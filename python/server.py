@@ -5,6 +5,7 @@ import signal
 import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
+from socketserver import ThreadingMixIn
 import json
 import threading
 import time
@@ -18,6 +19,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in a separate thread."""
+    pass
+
+
 class WebServerHandler(BaseHTTPRequestHandler):
     """Custom HTTP request handler"""
     
@@ -25,7 +31,6 @@ class WebServerHandler(BaseHTTPRequestHandler):
         """Handle GET requests"""
         parsed_url = urlparse(self.path)
         path = parsed_url.path
-        query_params = parse_qs(parsed_url.query)
         
         logger.info(f"GET {self.path} from {self.client_address[0]}")
         
@@ -56,7 +61,7 @@ class WebServerHandler(BaseHTTPRequestHandler):
             "Repository": "RepoOfWebServers",
             "URL": "https://github.com/Mattible/RepoOfWebServers",
             "version": "0.1.0",
-            "git Sha": os.getenv("GITSHA", "N/A"),
+            "gitSha": os.getenv("GITSHA", "N/A"),
             # "git Tag": os.getenv("GIT_TAG", "N/A"),
             "endpoints": [
                 {"path": "/", "method": "GET", "description": "Hello world from Python"},
@@ -92,7 +97,7 @@ class WebServerHandler(BaseHTTPRequestHandler):
     
     def _send_json_response(self, status_code, data):
         """Send JSON response"""
-        json_data = json.dumps(data, indent=2)
+        json_data = json.dumps(data)
         self._send_response(status_code, json_data, 'application/json')
     
     def log_message(self, format, *args):
@@ -123,7 +128,7 @@ class PythonWebServer:
     def start(self):
         """Start the web server and wait for shutdown signal."""
         try:
-            self.server = HTTPServer((self.host, self.port), WebServerHandler)
+            self.server = ThreadingHTTPServer((self.host, self.port), WebServerHandler)
             server_thread = threading.Thread(target=self.server.serve_forever)
             server_thread.daemon = True
 

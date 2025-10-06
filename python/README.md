@@ -95,7 +95,6 @@ curl http://localhost:8000/health
 curl http://localhost:8000/info
 # Response: 
 # {
-#     {
 #   "Programming Language": "Python",
 #   "Repository": "RepoOfWebServers",
 #   "URL": "https://github.com/Mattible/RepoOfWebServers",
@@ -112,7 +111,7 @@ curl http://localhost:8000/info
 ```
 python/
 ├── server.py         # Main server implementation
-├── Dockerfile        # Container configuration (to be created)
+├── Dockerfile        # Container configuration
 └── README.md        # This file
 ```
 
