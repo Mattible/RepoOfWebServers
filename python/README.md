@@ -47,7 +47,7 @@ chmod +x server.py
 ### Build the Docker Image
 
 ```bash
-docker build -t repo-ws-py.
+docker build -t repo-ws-py .
 ```
 
 ### Run the Container
@@ -113,7 +113,6 @@ curl http://localhost:8000/info
 python/
 ├── server.py         # Main server implementation
 ├── Dockerfile        # Container configuration (to be created)
-├── requirements.txt  # Python dependencies (optional)
 └── README.md        # This file
 ```
 

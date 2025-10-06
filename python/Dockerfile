@@ -18,8 +18,7 @@ RUN apk add --no-cache \
     upx
 
 # Install PyInstaller and other dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir pyinstaller
 
 # Copy the server file
 COPY server.py .

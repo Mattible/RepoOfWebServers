@@ -42,17 +42,12 @@ class WebServerHandler(BaseHTTPRequestHandler):
     
     def _send_hello_response(self):
         """Send hello world response"""
-        message = "Hello  World!\n"
+        message = "Hello World!\n"
         self._send_response(200, message, 'text/plain')
     
     def _send_health_response(self):
         """Send health check response"""
-        health_data = {
-            "status": "healthy",
-            "timestamp": time.time(),
-            "server": "Python HTTP Server"
-        }
-        self._send_json_response(200, health_data)
+        self._send_response(200, "OK", 'text/plain')
     
     def _send_info_response(self):
         """Send server info response"""
@@ -107,53 +102,51 @@ class WebServerHandler(BaseHTTPRequestHandler):
 
 class PythonWebServer:
     """Python Web Server class"""
-    
+
     def __init__(self, host='0.0.0.0', port=8000):
         self.host = host
         self.port = port
         self.server = None
-        self.server_thread = None
+        self._shutdown_event = threading.Event()
         self._setup_signal_handlers()
-    
+
     def _setup_signal_handlers(self):
         """Setup signal handlers for graceful shutdown"""
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
-    
+
     def _signal_handler(self, signum, frame):
-        """Handle shutdown signals"""
-        logger.info("Shutting down server...")
-        self.stop()
-        sys.exit(0)
-    
+        """Handle shutdown signals by setting the shutdown event."""
+        logger.info(f"Received signal {signum}, shutting down...")
+        self._shutdown_event.set()
+
     def start(self):
-        """Start the web server"""
+        """Start the web server and wait for shutdown signal."""
         try:
             self.server = HTTPServer((self.host, self.port), WebServerHandler)
+            server_thread = threading.Thread(target=self.server.serve_forever)
+            server_thread.daemon = True
+
             logger.info(f"Starting Python web server on {self.host}:{self.port}")
-            logger.info("Press Ctrl+C to shutdown server...")
-            
-            # Start server in a separate thread for better control
-            self.server_thread = threading.Thread(target=self.server.serve_forever)
-            self.server_thread.daemon = True
-            self.server_thread.start()
-            
-            # Keep main thread alive
-            while True:
-                time.sleep(1)
-                
+            server_thread.start()
+            logger.info("Press Ctrl+C to shutdown...")
+
+            # Wait for shutdown event
+            self._shutdown_event.wait()
+
         except OSError as e:
             logger.error(f"Failed to start server: {e}")
             sys.exit(1)
-        except KeyboardInterrupt:
+        finally:
             self.stop()
-    
+
     def stop(self):
-        """Stop the web server"""
+        """Stop the web server."""
         if self.server:
-            logger.info("Server shutdown gracefully")
+            logger.info("Server shutting down gracefully...")
             self.server.shutdown()
             self.server.server_close()
+            logger.info("Server stopped.")
 
 
 def main():
