@@ -1,21 +1,22 @@
-# Repo Of WebServers - A Pick your Poison Adventure
+# Repo Of WebServers - A Pick your Poison Adventure 🧪
 
 Welcome! - To the only corner of the internet that has more webserver code than anybody ever asked for!
 
-Created and Maintained by a **DevOps** Engineer (Not a Software Engineer)
+Created and Maintained by a **Platform / DevOps** Engineer (Not a Software Engineer)
 
 ## Web Servers Included
 
 - go
+- python
 
 ## Ground Rules
 
 | Rules  | Description |
 | :---: | ------------- |
 |  1  | Frameworks/Modules are allowed |
+|  2  | Every Language must have an accompanying Dockerfile with it |
 |  3  | Must be able to print "Hello World!" as a `STATUS 200` |
 |  4  | Return the following from `/info`, current `SHA` of this repository & url and last person to commit to that webserver. |
-|  2  | Every Language must have an accompanying Dockerfile with it |
 
 ## Aspirations
 
