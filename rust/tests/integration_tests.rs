@@ -1,5 +1,6 @@
 use rust_webserver::{WebServer, ServerInfo};
 use std::env;
+use serial_test::serial;
 
 // Tests moved from main.rs
 
@@ -10,24 +11,25 @@ fn test_main_function_creates_server() {
 }
 
 #[test]
+#[serial]
 fn test_main_function_respects_environment() {
     // Store original PORT value
     let original_port = env::var("WEBSERVER_PORT").ok();
     
     // Test with PORT set
-    env::set_var("WEBSERVER_PORT", "4000");
+    unsafe { env::set_var("WEBSERVER_PORT", "4000"); }
     let server = WebServer::new();
     assert_eq!(server.get_port(), "4000");
     
     // Test with PORT unset
-    env::remove_var("WEBSERVER_PORT");
+    unsafe { env::remove_var("WEBSERVER_PORT"); }
     let server = WebServer::new();
     assert_eq!(server.get_port(), "8000");
     
     // Restore original environment
     match original_port {
-        Some(port) => env::set_var("WEBSERVER_PORT", port),
-        None => env::remove_var("WEBSERVER_PORT"),
+        Some(port) => unsafe { env::set_var("WEBSERVER_PORT", port) },
+        None => unsafe { env::remove_var("WEBSERVER_PORT") },
     }
 }
 
@@ -51,9 +53,10 @@ fn test_main_server_functionality() {
 }
 
 #[test]
+#[serial]
 fn test_full_server_integration() {
     // Set up test environment with a specific test port
-    env::set_var("WEBSERVER_PORT", "8888");
+    unsafe { env::set_var("WEBSERVER_PORT", "8888"); }
     let server = WebServer::new();
 
     // Test server creation
@@ -66,18 +69,19 @@ fn test_full_server_integration() {
     assert_eq!(info.routes.len(), 4);
 
     // Clean up
-    env::remove_var("WEBSERVER_PORT");
+    unsafe { env::remove_var("WEBSERVER_PORT"); }
 }
 
 #[test]
+#[serial]
 fn test_environment_variable_handling() {
     // Test with WEBSERVER_PORT set
-    env::set_var("WEBSERVER_PORT", "9999");
+    unsafe { env::set_var("WEBSERVER_PORT", "9999"); }
     let server = WebServer::new();
     assert_eq!(server.get_port(), "9999");
 
     // Test with PORT unset
-    env::remove_var("WEBSERVER_PORT");
+    unsafe { env::remove_var("WEBSERVER_PORT"); }
     let server = WebServer::new();
     assert_eq!(server.get_port(), "8000");
 }
@@ -368,6 +372,7 @@ fn test_server_info_json_structure() {
 }
 
 #[test]
+#[serial]
 fn test_environment_variable_persistence() {
     use std::env;
 
@@ -375,12 +380,12 @@ fn test_environment_variable_persistence() {
     let original = env::var("WEBSERVER_PORT").ok();
 
     // Set WEBSERVER_PORT and create server
-    env::set_var("WEBSERVER_PORT", "5555");
+    unsafe { env::set_var("WEBSERVER_PORT", "5555"); }
     let server1 = WebServer::new();
     assert_eq!(server1.get_port(), "5555");
 
     // Change WEBSERVER_PORT and create another server
-    env::set_var("WEBSERVER_PORT", "6666");
+    unsafe { env::set_var("WEBSERVER_PORT", "6666"); }
     let server2 = WebServer::new();
     assert_eq!(server2.get_port(), "6666");
 
@@ -389,7 +394,7 @@ fn test_environment_variable_persistence() {
     assert_eq!(server2.get_port(), "6666");
 
     // Remove WEBSERVER_PORT and create server (should default to 8000)
-    env::remove_var("WEBSERVER_PORT");
+    unsafe { env::remove_var("WEBSERVER_PORT"); }
     let server3 = WebServer::new();
     assert_eq!(server3.get_port(), "8000");
 
@@ -399,8 +404,8 @@ fn test_environment_variable_persistence() {
 
     // Restore environment
     match original {
-        Some(port) => env::set_var("WEBSERVER_PORT", port),
-        None => env::remove_var("WEBSERVER_PORT"),
+        Some(port) => unsafe { env::set_var("WEBSERVER_PORT", port) },
+        None => unsafe { env::remove_var("WEBSERVER_PORT") },
     }
 }
 
@@ -423,25 +428,26 @@ fn test_clone_independence() {
 }
 
 #[test]
+#[serial]
 fn test_gitsha_environment_variable() {
     // Store original GITSHA value
     let original_gitsha = env::var("GITSHA").ok();
     
     // Test with GITSHA set
-    env::set_var("GITSHA", "abc123def");
+    unsafe { env::set_var("GITSHA", "abc123def"); }
     let server = WebServer::new();
     let info = server.create_server_info();
     assert_eq!(info.gitsha, "abc123def");
     
     // Test with GITSHA unset (should default to "N/A")
-    env::remove_var("GITSHA");
+    unsafe { env::remove_var("GITSHA"); }
     let server = WebServer::new();
     let info = server.create_server_info();
     assert_eq!(info.gitsha, "N/A");
     
     // Restore original environment
     match original_gitsha {
-        Some(gitsha) => env::set_var("GITSHA", gitsha),
-        None => env::remove_var("GITSHA"),
+        Some(gitsha) => unsafe { env::set_var("GITSHA", gitsha) },
+        None => unsafe { env::remove_var("GITSHA") },
     }
 }

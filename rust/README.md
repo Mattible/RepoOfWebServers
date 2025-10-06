@@ -28,7 +28,7 @@ A high-performance, memory-safe HTTP web server written in Rust with comprehensi
 ### Local Development
 
 ```bash
-# Run with default port (8080)
+# Run with default port (8000)
 cargo run
 
 # Run with custom port
@@ -61,13 +61,13 @@ docker build -t repo-ws-rust .
 
 ```bash
 # Run with default port mapping
-docker run -p 8080:8080 repo-ws-rust
+docker run -p 8000:8000 repo-ws-rust
 
 # Run with custom port
 docker run -p 3000:3000 -e WEBSERVER_PORT=3000 repo-ws-rust
 
 # Run in detached mode
-docker run -d -p 8080:8080 repo-ws-rust
+docker run -d -p 8000:8000 repo-ws-rust
 ```
 
 ## Configuration
@@ -84,21 +84,29 @@ The server can be configured using environment variables:
 ### Health Check
 
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:8000/health
 # Response: OK
 ```
 
 ### Server Information
 
 ```bash
-curl http://localhost:8080/info
-# Response: JSON with server details including routes
+curl http://localhost:8000/info
+# Response:
+# {
+#   "Programming Language": "Rust",
+#   "Repository": "RepoOfWebServers",
+#   "URL": "https://github.com/Mattible/RepoOfWebServers",
+#   "version": "0.1.0",
+#   "gitsSha": "xxxxxx",
+#   "routes": []
+# }
 ```
 
 ### Basic Request
 
 ```bash
-curl http://localhost:8080/
+curl http://localhost:8000/
 # Response: Hello, world!
 ```
 
@@ -112,7 +120,7 @@ rust/
 │   ├── main.rs              # Application entry point
 │   └── lib.rs               # Core server implementation
 ├── tests/
-│   └── integration_tests.rs # Comprehensive test suite (23 tests)
+│   └── integration_tests.rs # Comprehensive test suite
 ├── Cargo.toml              # Rust project configuration
 ├── Dockerfile              # Multi-stage container build
 └── README.md               # This file
@@ -122,8 +130,12 @@ rust/
 
 ```toml
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde = "1.0"
+serde_json = "1.0"                                  # JSON serialization support
+ctrlc = "3.4"                                        # Cross-platform signal handling for graceful shutdown
+
+[dev-dependencies]
+serial_test = "3.0"                                  # Test isolation for integration tests
 ```
 
 ## License

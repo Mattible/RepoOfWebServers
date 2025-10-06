@@ -1,4 +1,4 @@
-FROM rust:1.90-alpine AS builder
+FROM rust:1.91-alpine AS builder
 ARG TARGETOS TARGETARCH
 
 LABEL org.opencontainers.image.authors="mattible@gmail.com" \
