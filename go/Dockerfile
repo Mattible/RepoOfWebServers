@@ -1,5 +1,5 @@
-FROM golang:1.24-alpine AS builder
-ARG TARGETOS TARGETARCH
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
+ARG TARGETOS TARGETARCH BUILDPLATFORM
 
 LABEL org.opencontainers.image.authors="mattible@gmail.com" \
     version="0.1.0" \
