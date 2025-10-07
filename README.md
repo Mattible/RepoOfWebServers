@@ -7,6 +7,7 @@ Created and Maintained by a **DevOps** Engineer (Not a Software Engineer)
 ## Web Servers Included
 
 - go
+- rust
 
 ## Ground Rules
 

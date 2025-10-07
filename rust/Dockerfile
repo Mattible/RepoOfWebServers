@@ -7,11 +7,14 @@ LABEL org.opencontainers.image.authors="mattible@gmail.com" \
     description="The Rust WebServer from the RepoOfWebServers project"
 
 WORKDIR /app
+
+COPY src/ src/
+COPY Cargo.toml .
+
 COPY . .
 
 RUN apk add --no-cache musl-dev gcc libc-dev build-base
 
-RUN cargo clean
 RUN cargo build --release
 
 RUN adduser -D appuser

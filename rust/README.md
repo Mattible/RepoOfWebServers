@@ -141,4 +141,4 @@ serial_test = "3.0"                                  # Test isolation for integr
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](../LICENSE) file for details.

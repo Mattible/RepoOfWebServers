@@ -2,7 +2,6 @@
 name = "rust-webserver"
 version = "0.1.0"
 edition = "2024"
-authors = ["mattible@gmail.com"]
 description = "A simple Rust TCP-based HTTP web server with graceful shutdown"
 license = "MIT"
 
