@@ -8,6 +8,7 @@ Created and Maintained by a **Platform / DevOps** Engineer (Not a Software Engin
 
 - go
 - python
+- rust
 
 ## Ground Rules
 
