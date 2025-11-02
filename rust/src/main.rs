@@ -1,4 +1,3 @@
-use async_std;
 use rust_webserver::WebServer;
 
 #[async_std::main]
