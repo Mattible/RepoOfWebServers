@@ -14,6 +14,10 @@ on:
       - 'rust/**'
   workflow_dispatch:
 
+# Make sure CI fails on all warnings
+env:
+  RUSTFLAGS: "-Dwarnings"
+
 jobs:
   test:
     name: Run Tests
@@ -45,12 +49,13 @@ jobs:
 
     - name: Run tests
       run: cargo test
-    
-    - uses: giraffate/clippy-action@v1
-      with:
-        reporter: 'github-pr-review'
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: ./rust
+
+  Linting:
+    name: Run Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features
 
   coverage:
     name: Code Coverage
@@ -58,7 +63,7 @@ jobs:
     needs: test
     defaults:
       run:
-        working-directory: ./rust   
+        working-directory: /rust
     container:
       image: xd009642/tarpaulin:develop-nightly
       options: --security-opt seccomp=unconfined
