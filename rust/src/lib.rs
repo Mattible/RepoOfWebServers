@@ -32,6 +32,12 @@ pub struct WebServer {
     port: String,
 }
 
+impl Default for WebServer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WebServer {
     pub fn new() -> Self {
         let port_env = env::var("WEBSERVER_PORT").unwrap_or_else(|_| "8000".to_string());
