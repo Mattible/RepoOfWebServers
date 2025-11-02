@@ -41,7 +41,7 @@ jobs:
       with:
         toolchain: stable
         profile: minimal
-        components: rustfmt
+        components: rustfmt, clippy 
         working-directory: ./rust
     
     - name: Format Check
@@ -49,13 +49,9 @@ jobs:
 
     - name: Run tests
       run: cargo test
-
-  Linting:
-    name: Run Clippy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run Clippy
-        run: cargo clippy --all-targets --all-features
+  
+    - name: Linting
+      run: cargo clippy --all-targets --all-features
 
   coverage:
     name: Code Coverage
@@ -68,15 +64,19 @@ jobs:
       image: xd009642/tarpaulin:develop-nightly
       options: --security-opt seccomp=unconfined
     steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
     - name: Generate code coverage
       run: |
           cargo +nightly tarpaulin --verbose --all-features --workspace --timeout 120 --out xml
-
     # - name: Upload to codecov.io
     #   uses: codecov/codecov-action@v2
     #   with:
     #     fail_ci_if_error: true 
-  
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
