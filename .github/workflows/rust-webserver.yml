@@ -44,10 +44,10 @@ jobs:
       run: cargo fmt --check
 
     - name: Run tests
-      run: rust test -v ./...
+      run: cargo test --verbose
 
     - name: Run tests with coverage
-      run: rust test -coverprofile=coverage.out ./...
+      run: cargo test --coverage
 
     - uses: giraffate/clippy-action@v1
       with:
