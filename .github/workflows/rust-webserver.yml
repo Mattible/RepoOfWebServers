@@ -42,6 +42,18 @@ jobs:
     
     - name: Format Check
       run: cargo fmt --check
+
+    - name: Run tests
+      run: rust test -v ./...
+
+    - name: Run tests with coverage
+      run: rust test -coverprofile=coverage.out ./...
+
+    - uses: giraffate/clippy-action@v1
+      with:
+        reporter: 'github-pr-review'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: ./rust
   
   build:
     name: Build Docker Image
