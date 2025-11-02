@@ -47,7 +47,7 @@ jobs:
       run: cargo test --verbose
 
     - name: Run tests with coverage
-      run: cargo test --coverage
+      run: cargo tarpaulin --out html
 
     - uses: giraffate/clippy-action@v1
       with:
