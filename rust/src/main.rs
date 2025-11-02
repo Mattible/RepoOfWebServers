@@ -1,5 +1,4 @@
 use rust_webserver::WebServer;
-use async_std;
 
 #[async_std::main]
 async fn main() -> std::io::Result<()> {

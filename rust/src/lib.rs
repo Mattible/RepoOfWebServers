@@ -1,9 +1,9 @@
-use std::env;
-use std::sync::atomic::{AtomicBool, Ordering};
 use async_std::net::{TcpListener, TcpStream};
 use async_std::prelude::*;
 use async_std::task;
 use serde::{Deserialize, Serialize};
+use std::env;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 static SHUTDOWN_FLAG: AtomicBool = AtomicBool::new(false);
 
@@ -32,12 +32,20 @@ pub struct WebServer {
     port: String,
 }
 
+impl Default for WebServer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WebServer {
     pub fn new() -> Self {
         let port_env = env::var("WEBSERVER_PORT").unwrap_or_else(|_| "8000".to_string());
         let port = port_env.trim();
         let port = if port.is_empty() { "8000" } else { port };
-        Self { port: port.to_string() }
+        Self {
+            port: port.to_string(),
+        }
     }
 
     pub fn with_port(port: &str) -> Self {
@@ -58,10 +66,22 @@ impl WebServer {
             version: "0.1.0".to_string(),
             git_sha: env::var("GITSHA").unwrap_or_else(|_| "N/A".to_string()),
             routes: vec![
-                RouteInfo { path: "/".to_string(), description: "Hello World".to_string() },
-                RouteInfo { path: "/health".to_string(), description: "Health check".to_string() },
-                RouteInfo { path: "/info".to_string(), description: "Server info".to_string() },
-                RouteInfo { path: "/image".to_string(), description: "Image handler".to_string() },
+                RouteInfo {
+                    path: "/".to_string(),
+                    description: "Hello World".to_string(),
+                },
+                RouteInfo {
+                    path: "/health".to_string(),
+                    description: "Health check".to_string(),
+                },
+                RouteInfo {
+                    path: "/info".to_string(),
+                    description: "Server info".to_string(),
+                },
+                RouteInfo {
+                    path: "/image".to_string(),
+                    description: "Image handler".to_string(),
+                },
             ],
         }
     }
@@ -104,7 +124,8 @@ impl WebServer {
                 SHUTDOWN_FLAG.store(true, Ordering::Relaxed);
                 println!("\nReceived Ctrl+C, shutting down gracefully...");
             }
-        }).expect("Error setting Ctrl+C handler");
+        })
+        .expect("Error setting Ctrl+C handler");
 
         // Accept connections asynchronously
         let mut incoming = listener.incoming();
@@ -115,20 +136,20 @@ impl WebServer {
             }
 
             // Use timeout to periodically check shutdown flag
-            match async_std::future::timeout(std::time::Duration::from_millis(100), incoming.next()).await {
-                Ok(Some(stream_result)) => {
-                    match stream_result {
-                        Ok(stream) => {
-                            let server = self.clone();
-                            task::spawn(async move {
-                                Self::handle_client(stream, server).await;
-                            });
-                        }
-                        Err(e) => {
-                            eprintln!("Failed to accept connection: {}", e);
-                        }
+            match async_std::future::timeout(std::time::Duration::from_millis(100), incoming.next())
+                .await
+            {
+                Ok(Some(stream_result)) => match stream_result {
+                    Ok(stream) => {
+                        let server = self.clone();
+                        task::spawn(async move {
+                            Self::handle_client(stream, server).await;
+                        });
                     }
-                }
+                    Err(e) => {
+                        eprintln!("Failed to accept connection: {}", e);
+                    }
+                },
                 Ok(None) => break,
                 Err(_) => continue, // Timeout occurred, check shutdown flag again
             }
