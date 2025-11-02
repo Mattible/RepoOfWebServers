@@ -37,7 +37,7 @@ jobs:
       with:
         toolchain: stable
         profile: minimal
-        components: clippy, rustfmt
+        components: rustfmt, tarpaulin
         working-directory: ./rust
     
     - name: Format Check
