@@ -9,7 +9,7 @@ on:
       - 'python/**'
       - '.github/workflows/python-webserver.yml'
   pull_request:
-    branches: [ main]
+    branches: [main]
     paths:
       - 'python/**'
   workflow_dispatch:
