@@ -25,14 +25,14 @@ class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
 
 class WebServerHandler(BaseHTTPRequestHandler):
     """Custom HTTP request handler"""
-    
+
     def do_GET(self):
         """Handle GET requests"""
         parsed_url = urlparse(self.path)
         path = parsed_url.path
-        
+
         logger.info(f"GET {self.path} from {self.client_address[0]}")
-        
+
         if path == '/':
             self._send_hello_response()
         elif path == '/health':
@@ -43,16 +43,16 @@ class WebServerHandler(BaseHTTPRequestHandler):
             self._send_image_response()
         else:
             self._send_404_response()
-    
+
     def _send_hello_response(self):
         """Send hello world response"""
         message = "Hello World!\n"
         self._send_response(200, message, 'text/plain')
-    
+
     def _send_health_response(self):
         """Send health check response"""
         self._send_response(200, "OK", 'text/plain')
-    
+
     def _send_info_response(self):
         """Send server info response"""
         info_data = {
@@ -143,8 +143,12 @@ class PythonWebServer:
     def start(self):
         """Start the web server and wait for shutdown signal."""
         try:
-            self.server = ThreadingHTTPServer((self.host, self.port), WebServerHandler)
-            server_thread = threading.Thread(target=self.server.serve_forever)
+            self.server = ThreadingHTTPServer(
+                (self.host, self.port), WebServerHandler
+            )
+            server_thread = threading.Thread(
+                target=self.server.serve_forever
+            )
             server_thread.daemon = True
 
             logger.info(
