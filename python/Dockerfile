@@ -1,5 +1,5 @@
 # Build stage - compile Python to binary
-FROM python:3.13.7-alpine AS builder
+FROM python:3.14.0-alpine AS builder
 ARG TARGETOS TARGETARCH
 
 LABEL org.opencontainers.image.authors="mattible@gmail.com" \

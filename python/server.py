@@ -4,11 +4,10 @@ import logging
 import signal
 import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
 from socketserver import ThreadingMixIn
 import json
 import threading
-import time
 
 # Configure logging
 logging.basicConfig(
@@ -64,20 +63,36 @@ class WebServerHandler(BaseHTTPRequestHandler):
             "gitSha": os.getenv("GITSHA", "N/A"),
             # "git Tag": os.getenv("GIT_TAG", "N/A"),
             "endpoints": [
-                {"path": "/", "method": "GET", "description": "Hello world from Python"},
-                {"path": "/health", "method": "GET", "description": "Health check"},
-                {"path": "/info", "method": "GET", "description": "Server information"},
-                {"path": "/image", "method": "GET", "description": "Image handler"},
+                {
+                    "path": "/",
+                    "method": "GET",
+                    "description": "Hello world from Python"
+                },
+                {
+                    "path": "/health",
+                    "method": "GET",
+                    "description": "Health check"
+                },
+                {
+                    "path": "/info",
+                    "method": "GET",
+                    "description": "Server information"
+                },
+                {
+                    "path": "/image",
+                    "method": "GET",
+                    "description": "Image handler"
+                },
             ]
         }
         self._send_json_response(200, info_data)
-    
+
     def _send_image_response(self):
         """Send image handler response"""
         # TODO: Add image path to a cloud provided CDN Cache or local Storage
         message = ""
         self._send_response(200, message, 'text/plain')
-    
+
     def _send_404_response(self):
         """Send 404 not found response"""
         error_data = {
@@ -86,7 +101,7 @@ class WebServerHandler(BaseHTTPRequestHandler):
             "status_code": 404
         }
         self._send_json_response(404, error_data)
-    
+
     def _send_response(self, status_code, message, content_type):
         """Send HTTP response with given status, message and content type"""
         self.send_response(status_code)
@@ -94,12 +109,12 @@ class WebServerHandler(BaseHTTPRequestHandler):
         self.send_header('Content-Length', str(len(message.encode())))
         self.end_headers()
         self.wfile.write(message.encode())
-    
+
     def _send_json_response(self, status_code, data):
         """Send JSON response"""
         json_data = json.dumps(data)
         self._send_response(status_code, json_data, 'application/json')
-    
+
     def log_message(self, format, *args):
         """Override default log message to use our logger"""
         logger.info(f"{self.client_address[0]} - {format % args}")
@@ -132,7 +147,9 @@ class PythonWebServer:
             server_thread = threading.Thread(target=self.server.serve_forever)
             server_thread.daemon = True
 
-            logger.info(f"Starting Python web server on {self.host}:{self.port}")
+            logger.info(
+                f"Starting Python web server on {self.host}:{self.port}"
+            )
             server_thread.start()
             logger.info("Press Ctrl+C to shutdown...")
 
@@ -140,7 +157,9 @@ class PythonWebServer:
             self._shutdown_event.wait()
 
         except OSError as e:
-            logger.error(f"Failed to start server: {e}")
+            logger.error(
+                f"Failed to start server: {e}"
+            )
             sys.exit(1)
         finally:
             self.stop()

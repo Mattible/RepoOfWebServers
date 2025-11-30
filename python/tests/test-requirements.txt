@@ -1,0 +1,16 @@
+# Development dependencies for Python Web Server
+
+# Testing frameworks
+unittest2>=1.1.0  # Enhanced unittest for older Python versions (optional)
+
+# Code coverage
+coverage>=7.0.0
+
+# Test reporting
+pytest>=9.0.0
+pytest-cov>=7.0.0
+
+# Linting and formatting
+flake8>=7.0.0
+black>=25.0.0
+mypy>=1.19.0
